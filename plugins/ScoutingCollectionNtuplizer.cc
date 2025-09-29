@@ -69,6 +69,18 @@ private:
 
    // PF candidates pT
     std::vector<float> PF_pT_211_;
+    std::vector<float> PF_eta_211_;
+    std::vector<float> PF_phi_211_;
+    std::vector<float> PF_vertex_211_;
+    std::vector<float> PF_normchi2_211_;
+    std::vector<float> PF_dz_211_;
+    std::vector<float> PF_dxy_211_;
+    std::vector<float> PF_dzsig_211_;
+    std::vector<float> PF_dxysig_211_;
+    std::vector<float> PF_trk_pt_211_;
+    std::vector<float> PF_trk_eta_211_;
+    std::vector<float> PF_trk_phi_211_;
+
     std::vector<float> PF_pT_n211_;
     std::vector<float> PF_pT_130_;
     std::vector<float> PF_pT_22_;
@@ -99,6 +111,18 @@ void ScoutingCollectionNtuplizer::analyze(const edm::Event& iEvent, const edm::E
     edm::Handle<std::vector<Run3ScoutingParticle>> pfcandsH;
 
     PF_pT_211_.clear();
+    PF_eta_211_.clear();
+    PF_phi_211_.clear();
+    PF_vertex_211_.clear();
+    PF_normchi2_211_.clear();
+    PF_dz_211_.clear();
+    PF_dxy_211_.clear();
+    PF_dzsig_211_.clear();
+    PF_dxysig_211_.clear();
+    PF_trk_pt_211_.clear();
+    PF_trk_eta_211_.clear();
+    PF_trk_phi_211_.clear();
+
     PF_pT_n211_.clear();
     PF_pT_130_.clear();
     PF_pT_22_.clear();
@@ -115,6 +139,17 @@ void ScoutingCollectionNtuplizer::analyze(const edm::Event& iEvent, const edm::E
     switch (cand.pdgId()) {
       case 211:
         PF_pT_211_.push_back(cand.pt());
+	PF_eta_211_.push_back(cand.eta());
+        PF_phi_211_.push_back(cand.phi());
+        PF_vertex_211_.push_back(cand.vertex());
+        PF_normchi2_211_.push_back(cand.normchi2());
+        PF_dz_211_.push_back(cand.dz());
+        PF_dxy_211_.push_back(cand.dxy());
+        PF_dzsig_211_.push_back(cand.dzsig());
+        PF_dxysig_211_.push_back(cand.dxysig());
+        PF_trk_pt_211_.push_back(cand.trk_pt());
+        PF_trk_eta_211_.push_back(cand.trk_eta());
+        PF_trk_phi_211_.push_back(cand.trk_phi());
         break;
 
       case -211:
@@ -156,6 +191,18 @@ void ScoutingCollectionNtuplizer::createTree(){
     tree_ = fs->make<TTree>("tree", "tree");
 
     tree_->Branch("PF_pT_211", &PF_pT_211_);
+    tree_->Branch("PF_eta_211",      &PF_eta_211_);
+    tree_->Branch("PF_phi_211",      &PF_phi_211_);
+    tree_->Branch("PF_vertex_211",   &PF_vertex_211_);
+    tree_->Branch("PF_normchi2_211", &PF_normchi2_211_);
+    tree_->Branch("PF_dz_211",       &PF_dz_211_);
+    tree_->Branch("PF_dxy_211",      &PF_dxy_211_);
+    tree_->Branch("PF_dzsig_211",    &PF_dzsig_211_);
+    tree_->Branch("PF_dxysig_211",   &PF_dxysig_211_);
+    tree_->Branch("PF_trk_pt_211",   &PF_trk_pt_211_);
+    tree_->Branch("PF_trk_eta_211",  &PF_trk_eta_211_);
+    tree_->Branch("PF_trk_phi_211",  &PF_trk_phi_211_);
+
     tree_->Branch("PF_pT_n211", &PF_pT_n211_);
     tree_->Branch("PF_pT_130", &PF_pT_130_);
     tree_->Branch("PF_pT_22", &PF_pT_22_);
