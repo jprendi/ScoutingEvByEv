@@ -22,6 +22,7 @@ Getting the full collection as in ScoutingCollectionMonitor out !
 #include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
+#include "FWCore/Framework/interface/MakerMacros.h"
 
 #include <TLorentzVector.h>
 #include <cmath>
