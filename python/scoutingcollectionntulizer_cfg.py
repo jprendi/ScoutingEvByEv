@@ -3,7 +3,7 @@ import FWCore.ParameterSet.Config as cms
 from FWCore.ParameterSet.VarParsing import VarParsing
 params = VarParsing('analysis')
 
-params.setDefault('inputFiles', 'file:XYZ.root')
+params.setDefault('inputFiles', 'file:/eos/user/j/jprendi/scoutingEvByEv/src/outputLocalTestDataScouting.root')
 params.setDefault('outputFile', 'output.root')
 params.setDefault('maxEvents', 100)
 
