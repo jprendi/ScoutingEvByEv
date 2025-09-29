@@ -17,6 +17,12 @@ Getting the full collection as in ScoutingCollectionMonitor out !
 //
 #include "FWCore/Framework/interface/one/EDAnalyzer.h"
 #include "FWCore/Framework/interface/Event.h"
+#include "FWCore/ParameterSet/interface/ParameterSet.h"
+#include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
+#include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
+#include "FWCore/ServiceRegistry/interface/Service.h"
+#include "CommonTools/UtilAlgos/interface/TFileService.h"
+
 #include <TLorentzVector.h>
 #include <cmath>
 #include <memory>
@@ -33,7 +39,7 @@ Getting the full collection as in ScoutingCollectionMonitor out !
 class ScoutingCollectionNtuplizer : public edm::one::EDAnalyzer<edm::one::SharedResources> {
 public:
   explicit ScoutingCollectionNtuplizer(const edm::ParameterSet&);
-  ~ScoutingCollectionNtuplizer() override = default;
+ ~ScoutingCollectionNtuplizer() override = default;
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 private:
 
@@ -74,17 +80,17 @@ private:
 
 
 ScoutingCollectionNtuplizer::ScoutingCollectionNtuplizer(const edm::ParameterSet& iConfig): 
-    pfcandsToken             (consumes<std::vector<Run3ScoutingParticle> >     (iConfig.getParameter<edm::InputTag>("pfcands")))
+    pfcandsToken_             (consumes<std::vector<Run3ScoutingParticle> >     (iConfig.getParameter<edm::InputTag>("pfcands")))
 {
     usesResource("TFileService");
     createTree();
 }
 
 
-ScoutingCollectionNtuplizer::~ScoutingCollectionNtuplizer() {
-  // do anything here that needs to be done at desctruction time
-  // (e.g. close files, deallocate resources etc.)
-}
+// ScoutingCollectionNtuplizer::~ScoutingCollectionNtuplizer() {
+// // do anything here that needs to be done at desctruction time
+//  // (e.g. close files, deallocate resources etc.)
+//}
 
 void ScoutingCollectionNtuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
     using namespace edm;
@@ -167,4 +173,4 @@ void ScoutingCollectionNtuplizer::fillDescriptions(edm::ConfigurationDescription
 }
 
 
-DEFINE_FWK_MODULE(ScoutingCollectionNtuplizer)
+DEFINE_FWK_MODULE(ScoutingCollectionNtuplizer);
