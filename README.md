@@ -16,19 +16,18 @@ cd CMSSW_15_0_14/src
 cmsenv
 scram b -j
 git clone git@github.com:jprendi/ScoutingEvByEv.git
-cp ScoutingEvByEv/createTree* ScoutingEvByEv/getScoutingFile.sh .
+cp ScoutingEvByEv/printTree* ScoutingEvByEv/getScoutingFile.sh .
 chmod +x getScoutingFile.sh
 ./getScoutingFile.sh # this gives as an output the scouting-root-file needed!
 mkdir -p Scouting/Ntuplizer
 cp -r ScoutingEvByEv/plugins ScoutingEvByEv/python Scouting/Ntuplizer
-cp ScoutingEvByEv/createTree* .
 cmsRun Scouting/Ntuplizer/python/scoutingcollectionntulizer_cfg.py inputFiles=files:outputLocalTestDataScouting.root
 ```
 for which we can use `inputFiles`, `outputFile` and `numEvents` are the input parameters one can give it. Alternatively one can edit this in the python config file directly!
 Once this has run, we can check if it's non-empty by running:
 ```
-chmod +x createTree.sh
-./createTree.sh
+chmod +x printTree.sh
+./printTree.sh
 ```
 
 where it could look something like this:
