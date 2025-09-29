@@ -1,217 +1,180 @@
-
 // -*- C++ -*-
 //
-// Package:    ??/??
+// Package:    Scouting/Ntuplizer
 // Class:      ScoutingCollectionNtuplizer
 //
-/**\class ScoutingCollectionNtuplizer ScoutingCollectionNtuplizer.cc 
-          ??/??/plugins/ScoutingCollectionNtuplizer.cc
+/**\class ScoutingCollectionNtuplizer ScoutingCollectionNtuplizer.cc
+          Scouting/Ntuplizer/plugins/ScoutingCollectionNtuplizer.cc
 
-Description: ScoutingCollectionNtuplizer ...
-Getting the full collection as in ScoutingCollectionMonitor out ! 
+Description: Ntuplizer for scouting PF candidates (for now).
 */
 //
 // Original Author:  Jessica Prendi
-//         Created:  Mon, 29 Sep 2025 Xx:Yy:Zz GMT
+//         Created:  Mon, 29 Sep 2025 12:04:23 GMT
 //
 //
+
+#include <memory>
+#include <vector>
+#include <string>
+#include <map>
+
+#include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/one/EDAnalyzer.h"
 #include "FWCore/Framework/interface/Event.h"
+#include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
 #include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
-#include "FWCore/Framework/interface/MakerMacros.h"
-
-#include <TLorentzVector.h>
-#include <cmath>
-#include <memory>
-#include <vector>
-#include <TTree.h>
-#include <vector>
-#include <string>
 
 #include "DataFormats/Scouting/interface/Run3ScoutingParticle.h"
 
+#include <TTree.h>
 
+
+// defining a structure as it avoids repetition for the PFcands (where the tree output will either way be structured identically)
+struct ParticleVars {
+    std::vector<float> pT;
+    std::vector<float> eta;
+    std::vector<float> phi;
+    std::vector<float> vertex;
+    std::vector<float> normchi2;
+    std::vector<float> dz;
+    std::vector<float> dxy;
+    std::vector<float> dzsig;
+    std::vector<float> dxysig;
+    std::vector<float> trk_pt;
+    std::vector<float> trk_eta;
+    std::vector<float> trk_phi;
+
+
+    // define this clear function to remove content within the particleData_, as the std::map::clear function would otherwise clear the whole map !
+    void clear() {
+        pT.clear();
+        eta.clear();
+        phi.clear();
+        vertex.clear();
+        normchi2.clear();
+        dz.clear();
+        dxy.clear();
+        dzsig.clear();
+        dxysig.clear();
+        trk_pt.clear();
+        trk_eta.clear();
+        trk_phi.clear();
+    }
+};
 
 
 class ScoutingCollectionNtuplizer : public edm::one::EDAnalyzer<edm::one::SharedResources> {
 public:
   explicit ScoutingCollectionNtuplizer(const edm::ParameterSet&);
- ~ScoutingCollectionNtuplizer() override = default;
+  ~ScoutingCollectionNtuplizer() override = default;
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
-private:
 
+private:
     void createTree();
     void analyze(const edm::Event&, const edm::EventSetup&) override;
 
     template <typename T>
-    void setToken(edm::EDGetTokenT<T>& token, const edm::ParameterSet& iConfig, std::string name) {
-        const auto inputTag = iConfig.getParameter<edm::InputTag>(name);
-        if (!inputTag.encode().empty()) {
-            token = consumes(inputTag);
-        }
-    }
-
-    template <typename T>
     bool getValidHandle(const edm::Event& iEvent,
                         const edm::EDGetTokenT<T>& token,
-                        edm::Handle<T>& handle,
-                        const std::string& label) {
+                        edm::Handle<T>& handle) {
       iEvent.getByToken(token, handle);
       return handle.isValid();
     }
-    
+
     const edm::EDGetTokenT<std::vector<Run3ScoutingParticle>> pfcandsToken_;
     TTree* tree_;
 
-   // PF candidates pT
-    std::vector<float> PF_pT_211_;
-    std::vector<float> PF_eta_211_;
-    std::vector<float> PF_phi_211_;
-    std::vector<float> PF_vertex_211_;
-    std::vector<float> PF_normchi2_211_;
-    std::vector<float> PF_dz_211_;
-    std::vector<float> PF_dxy_211_;
-    std::vector<float> PF_dzsig_211_;
-    std::vector<float> PF_dxysig_211_;
-    std::vector<float> PF_trk_pt_211_;
-    std::vector<float> PF_trk_eta_211_;
-    std::vector<float> PF_trk_phi_211_;
-
-    std::vector<float> PF_pT_n211_;
-    std::vector<float> PF_pT_130_;
-    std::vector<float> PF_pT_22_;
-    std::vector<float> PF_pT_13_;
-    std::vector<float> PF_pT_n13_;
-    std::vector<float> PF_pT_1_;
-    std::vector<float> PF_pT_2_;
-
+    // map to simplify the tree filling logic etc for the PF Cands
+    // int is the pdgId key then the value is simply the above defined struct
+    std::map<int, ParticleVars> particleData_;
+    
+    // A helper to keep track of which particle types we want to save
+    const std::vector<int> pdgIdsToKeep_ = {211, -211, 130, 22, 13, -13, 1, 2};
 };
 
-
-ScoutingCollectionNtuplizer::ScoutingCollectionNtuplizer(const edm::ParameterSet& iConfig): 
-    pfcandsToken_             (consumes<std::vector<Run3ScoutingParticle> >     (iConfig.getParameter<edm::InputTag>("pfcands")))
+ScoutingCollectionNtuplizer::ScoutingCollectionNtuplizer(const edm::ParameterSet& iConfig):
+    pfcandsToken_(consumes<std::vector<Run3ScoutingParticle>>(iConfig.getParameter<edm::InputTag>("pfcands")))
 {
     usesResource("TFileService");
     createTree();
 }
 
-
-// ScoutingCollectionNtuplizer::~ScoutingCollectionNtuplizer() {
-// // do anything here that needs to be done at desctruction time
-//  // (e.g. close files, deallocate resources etc.)
-//}
-
 void ScoutingCollectionNtuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
     using namespace edm;
-    using namespace std;
+
     edm::Handle<std::vector<Run3ScoutingParticle>> pfcandsH;
-
-    PF_pT_211_.clear();
-    PF_eta_211_.clear();
-    PF_phi_211_.clear();
-    PF_vertex_211_.clear();
-    PF_normchi2_211_.clear();
-    PF_dz_211_.clear();
-    PF_dxy_211_.clear();
-    PF_dzsig_211_.clear();
-    PF_dxysig_211_.clear();
-    PF_trk_pt_211_.clear();
-    PF_trk_eta_211_.clear();
-    PF_trk_phi_211_.clear();
-
-    PF_pT_n211_.clear();
-    PF_pT_130_.clear();
-    PF_pT_22_.clear();
-    PF_pT_13_.clear();
-    PF_pT_n13_.clear();
-    PF_pT_1_.clear();
-    PF_pT_2_.clear();
-
-    if (!getValidHandle(iEvent, pfcandsToken_, pfcandsH, "PF candidates")) {
-    return;
-  }
-
-  for (const auto& cand : *pfcandsH) {
-    switch (cand.pdgId()) {
-      case 211:
-        PF_pT_211_.push_back(cand.pt());
-	PF_eta_211_.push_back(cand.eta());
-        PF_phi_211_.push_back(cand.phi());
-        PF_vertex_211_.push_back(cand.vertex());
-        PF_normchi2_211_.push_back(cand.normchi2());
-        PF_dz_211_.push_back(cand.dz());
-        PF_dxy_211_.push_back(cand.dxy());
-        PF_dzsig_211_.push_back(cand.dzsig());
-        PF_dxysig_211_.push_back(cand.dxysig());
-        PF_trk_pt_211_.push_back(cand.trk_pt());
-        PF_trk_eta_211_.push_back(cand.trk_eta());
-        PF_trk_phi_211_.push_back(cand.trk_phi());
-        break;
-
-      case -211:
-        PF_pT_n211_.push_back(cand.pt());
-        break;
-
-      case 130:
-        PF_pT_130_.push_back(cand.pt());
-        break;
-
-      case 22:
-        PF_pT_22_.push_back(cand.pt());
-        break;
-
-      case 13:
-        PF_pT_13_.push_back(cand.pt());
-        break;
-
-      case -13:
-        PF_pT_n13_.push_back(cand.pt());
-        break;
-
-      case 1:
-        PF_pT_1_.push_back(cand.pt());
-        break;
-
-      case 2:
-        PF_pT_2_.push_back(cand.pt());
-        break;
+    if (!getValidHandle(iEvent, pfcandsToken_, pfcandsH)) {
+        return;
     }
-  }
+
+    // here we are using the function that we defined above in the struct
+    // what happens here is that we loop over all the "keys" in our map particleData_, accessing the struct ParticleVars that contains several vectors
+    // with .second we access the values (so the struct particleData_) and then we remove it with our predefined function clear within the struct..
+    for (auto& pair : particleData_) {
+        pair.second.clear();
+    }
+
+    // loops over pfCands 
+    for (const auto& cand : *pfcandsH) {
+        // looks whether the pdgId within the pfCands event matches with the pdgIds we want to store .
+	// .find gives back either the iterator or returns .end() if it is not found which is what we check for later
+        auto it = particleData_.find(cand.pdgId());
+
+        // here we check whether "finding" the pdgId worked
+	if (it != particleData_.end()) {
+		// from the it, we only care about the second because this is where we have our ParticleVars struct saved in that contains all the vectors!
+            ParticleVars& data = it->second; 
+            data.pT.push_back(cand.pt());
+            data.eta.push_back(cand.eta());
+            data.phi.push_back(cand.phi());
+            data.vertex.push_back(cand.vertex());
+            data.normchi2.push_back(cand.normchi2());
+            data.dz.push_back(cand.dz());
+            data.dxy.push_back(cand.dxy());
+            data.dzsig.push_back(cand.dzsig());
+            data.dxysig.push_back(cand.dxysig());
+            data.trk_pt.push_back(cand.trk_pt());
+            data.trk_eta.push_back(cand.trk_eta());
+            data.trk_phi.push_back(cand.trk_phi());
+        }
+    }
 
     tree_->Fill();
 }
-
 
 void ScoutingCollectionNtuplizer::createTree(){
     edm::Service<TFileService> fs;
     tree_ = fs->make<TTree>("tree", "tree");
 
-    tree_->Branch("PF_pT_211", &PF_pT_211_);
-    tree_->Branch("PF_eta_211",      &PF_eta_211_);
-    tree_->Branch("PF_phi_211",      &PF_phi_211_);
-    tree_->Branch("PF_vertex_211",   &PF_vertex_211_);
-    tree_->Branch("PF_normchi2_211", &PF_normchi2_211_);
-    tree_->Branch("PF_dz_211",       &PF_dz_211_);
-    tree_->Branch("PF_dxy_211",      &PF_dxy_211_);
-    tree_->Branch("PF_dzsig_211",    &PF_dzsig_211_);
-    tree_->Branch("PF_dxysig_211",   &PF_dxysig_211_);
-    tree_->Branch("PF_trk_pt_211",   &PF_trk_pt_211_);
-    tree_->Branch("PF_trk_eta_211",  &PF_trk_eta_211_);
-    tree_->Branch("PF_trk_phi_211",  &PF_trk_phi_211_);
+    for (int pdgId : pdgIdsToKeep_) {
+        // map.emplace will return an std::pair, the first entry being the iterator and the secon done being a bool that tells us whether the emplacing was successful
+	// the emplace function on maps will only work in case the key is new so all keys in a map need to be unique 
+        ParticleVars& data = particleData_.emplace(pdgId, ParticleVars()).first->second;
+        
+        // using std::to_string needs to have a name assigned for the negative signed pdgId
+	std::string id_str = std::to_string(pdgId);
+        if (pdgId < 0) {
+            id_str = "n" + std::to_string(std::abs(pdgId));
+        }
 
-    tree_->Branch("PF_pT_n211", &PF_pT_n211_);
-    tree_->Branch("PF_pT_130", &PF_pT_130_);
-    tree_->Branch("PF_pT_22", &PF_pT_22_);
-    tree_->Branch("PF_pT_13", &PF_pT_13_);
-    tree_->Branch("PF_pT_n13", &PF_pT_n13_);
-    tree_->Branch("PF_pT_1", &PF_pT_1_);
-    tree_->Branch("PF_pT_2", &PF_pT_2_);
-
-
+        tree_->Branch(("PF_pT_" + id_str).c_str(), &data.pT);
+        tree_->Branch(("PF_eta_" + id_str).c_str(), &data.eta);
+        tree_->Branch(("PF_phi_" + id_str).c_str(), &data.phi);
+        tree_->Branch(("PF_vertex_" + id_str).c_str(), &data.vertex);
+        tree_->Branch(("PF_normchi2_" + id_str).c_str(), &data.normchi2);
+        tree_->Branch(("PF_dz_" + id_str).c_str(), &data.dz);
+        tree_->Branch(("PF_dxy_" + id_str).c_str(), &data.dxy);
+        tree_->Branch(("PF_dzsig_" + id_str).c_str(), &data.dzsig);
+        tree_->Branch(("PF_dxysig_" + id_str).c_str(), &data.dxysig);
+        tree_->Branch(("PF_trk_pt_" + id_str).c_str(), &data.trk_pt);
+        tree_->Branch(("PF_trk_eta_" + id_str).c_str(), &data.trk_eta);
+        tree_->Branch(("PF_trk_phi_" + id_str).c_str(), &data.trk_phi);
+    }
 }
 
 void ScoutingCollectionNtuplizer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
@@ -220,5 +183,6 @@ void ScoutingCollectionNtuplizer::fillDescriptions(edm::ConfigurationDescription
   descriptions.addWithDefaultLabel(desc);
 }
 
-
 DEFINE_FWK_MODULE(ScoutingCollectionNtuplizer);
+
+
