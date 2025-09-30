@@ -19,7 +19,7 @@ chmod +x getScoutingFile.sh
 ./getScoutingFile.sh # this gives as an output the scouting-root-file needed!
 mkdir -p Scouting/Ntuplizer
 cp -r ScoutingEvByEv/plugins ScoutingEvByEv/python Scouting/Ntuplizer
-cmsRun Scouting/Ntuplizer/python/scoutingcollectionntulizer_cfg.py inputFiles=files:outputLocalTestDataScouting.root
+cmsRun Scouting/Ntuplizer/python/scoutingcollectionntulizer_cfg.py inputFiles=file:outputLocalTestDataScouting.root
 ```
 for which we can use `inputFiles`, `outputFile` and `numEvents` are the input parameters one can give it. Alternatively one can edit this in the python config file directly!
 Once this has run, we can check if it's non-empty by running:
