@@ -95,6 +95,9 @@ private:
     
     // A helper to keep track of which particle types we want to save
     const std::vector<int> pdgIdsToKeep_ = {211, -211, 130, 22, 13, -13, 1, 2};
+
+    unsigned int run_, lumi_;
+    ULong64_t event_;
 };
 
 ScoutingCollectionNtuplizer::ScoutingCollectionNtuplizer(const edm::ParameterSet& iConfig):
@@ -106,6 +109,10 @@ ScoutingCollectionNtuplizer::ScoutingCollectionNtuplizer(const edm::ParameterSet
 
 void ScoutingCollectionNtuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
     using namespace edm;
+
+    run_ = iEvent.eventAuxiliary().run();
+    event_ = iEvent.eventAuxiliary().event();
+    lumi_ = iEvent.eventAuxiliary().luminosityBlock();
 
     edm::Handle<std::vector<Run3ScoutingParticle>> pfcandsH;
     if (!getValidHandle(iEvent, pfcandsToken_, pfcandsH)) {
@@ -150,6 +157,10 @@ void ScoutingCollectionNtuplizer::analyze(const edm::Event& iEvent, const edm::E
 void ScoutingCollectionNtuplizer::createTree(){
     edm::Service<TFileService> fs;
     tree_ = fs->make<TTree>("tree", "tree");
+
+    tree_->Branch("run", &run_, "run/i");
+    tree_->Branch("lumi", &lumi_, "lumi/i");
+    tree_->Branch("event", &event_, "event/l");
 
     for (int pdgId : pdgIdsToKeep_) {
         // map.emplace will return an std::pair, the first entry being the iterator and the secon done being a bool that tells us whether the emplacing was successful
