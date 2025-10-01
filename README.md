@@ -3,7 +3,8 @@
 The goal is to be able to do event by event comparison on scouting output for the use of the NGT demonstrator. As a first step a NTuplizer for all the scouting objects needs to be created.
 
 # Progress
-- [x] PF Candidates 
+- [x]  Event, Lumi and Run number info
+- [x]  PF Candidates 
 
 # How to set it all up
 
